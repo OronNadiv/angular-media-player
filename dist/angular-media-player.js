@@ -352,6 +352,30 @@ angular.module('mediaPlayer', ['mediaPlayer.helpers'])
         seekable: element[0].seekable,
       }, playerDefaults, playerMethods);
       bindListeners(mediaScope, element[0], element);
+
+      // Workaround for mobile browser restriction:
+      // http://www.bountysource.com/issues/4468221-android-browser-requires-user-interaction-before-playing-audio
+      function mediaPlaybackRequiresUserGesture() {
+        // test if play() is ignored when not called from an input event handler
+        var elem = element[0];
+        elem.play();
+        return elem.paused;
+      }
+
+      function removeBehaviorsRestrictions() {
+        var elem = element[0];
+        elem.load();
+        window.removeEventListener('keydown', removeBehaviorsRestrictions);
+        window.removeEventListener('mousedown', removeBehaviorsRestrictions);
+        window.removeEventListener('touchstart', removeBehaviorsRestrictions);
+      }
+
+      if (mediaPlaybackRequiresUserGesture()) {
+        window.addEventListener('keydown', removeBehaviorsRestrictions);
+        window.addEventListener('mousedown', removeBehaviorsRestrictions);
+        window.addEventListener('touchstart', removeBehaviorsRestrictions);
+      }
+
       return mediaScope;
     };
 
